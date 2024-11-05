@@ -1,33 +1,50 @@
-
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+// src/auth/auth.service.ts
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
+import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
-    constructor(private usersService: UsersService) { }
+  constructor(private usersService: UsersService) {}
 
-    async signIn(username: string, pass: string): Promise<any> {
-        const user = await this.usersService.findOne(username);
-        if (user?.password !== pass) {
-            throw new UnauthorizedException();
-        }
-        const { password, ...result } = user;
-        // TODO: Generate a JWT and return it here
-        // instead of the user object
-        return result;
+  async signIn(email: string, pass: string): Promise<any> {
+    // Check if the user exists
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
     }
-    async register(username: string, password: string): Promise<any> {
-        // Check if the user already exists by email
-        try {
-            const existingUser = await this.usersService.findOne(username);
-            if (existingUser) {
-                throw new Error('User already exists');
-            }
-            // Proceed with password hashing and saving the new user
-            return this.usersService.addUser(username, password); // Adjust as needed for your database
-        } catch (error) {
-            throw error;
-        }
 
+    // Verify the password
+    const passwordMatch = await bcrypt.compare(pass, user.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid password');
     }
+
+    // Generate a JWT
+    const token = this.generateJwt(user._id as string, user.email);
+    return { accessToken: token };
+  }
+
+  async register(username: string, email: string, password: string): Promise<any> {
+    // Check if the user already exists
+    const existingUser = await this.usersService.findOneByEmail(email);
+    if (existingUser) {
+      throw new ConflictException('User already exists');
+    }
+
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Save the user with the hashed password
+    const newUser = await this.usersService.createUser(username, email, hashedPassword);
+    return { message: 'User registered successfully', userId: newUser._id };
+  }
+
+  private generateJwt(userId: string, email: string): string {
+    // JWT secret should be stored securely in environment variables
+    const secret = process.env.JWT_SECRET;
+    const payload = { sub: userId, email };
+    return jwt.sign(payload, secret, { expiresIn: '1h' });
+  }
 }
