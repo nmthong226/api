@@ -14,17 +14,24 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('User not found');
     }
-
+  
     // Verify the password
     const passwordMatch = await bcrypt.compare(pass, user.password);
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid password');
     }
-
-    // Generate a JWT
-    const token = this.generateJwt(user._id as string, user.email);
-    return { accessToken: token };
+  
+    // Return a success message or user details (excluding sensitive information)
+    return {
+      message: 'Login successful',
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.username,
+      },
+    };
   }
+  
 
   async register(username: string, email: string, password: string): Promise<any> {
     // Check if the user already exists
