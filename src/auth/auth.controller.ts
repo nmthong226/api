@@ -12,7 +12,6 @@ export class AuthController {
   @Post('register')
   async register(@Body() body: { username: string; email: string; password: string; }) {
     const { username, password, email } = body;
-    console.log(body);
     // Manually check for required fields
     if (!username || !password ) {
       throw new Error('Missing required fields');
