@@ -10,6 +10,7 @@ export class AuthService {
 
   async signIn(email: string, pass: string): Promise<any> {
     // Check if the user exists
+    console.log(email);
     const user = await this.usersService.findOneByEmail(email);
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -21,7 +22,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid password');
     }
   
-    // Return a success message or user details (excluding sensitive information)
+    // Generate JWT token
+    const token = this.generateJwt(user._id as string, user.email);
+  
+    // Return user data and token
     return {
       message: 'Login successful',
       user: {
@@ -29,6 +33,7 @@ export class AuthService {
         email: user.email,
         name: user.username,
       },
+      token,
     };
   }
   
