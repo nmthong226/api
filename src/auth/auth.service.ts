@@ -10,7 +10,6 @@ export class AuthService {
 
   async signIn(email: string, pass: string): Promise<any> {
     // Check if the user exists
-    console.log(email);
     const user = await this.usersService.findOneByEmail(email);
     if (!user) {
       throw new UnauthorizedException('User not found');
@@ -31,7 +30,8 @@ export class AuthService {
       user: {
         id: user._id,
         email: user.email,
-        name: user.username,
+        username: user.username,
+        createdAt: user.createdAt
       },
       token,
     };
