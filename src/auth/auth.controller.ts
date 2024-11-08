@@ -3,17 +3,17 @@ import { AuthService } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  signIn(@Body() signInDto: { email: string; password: string }) {
-    return this.authService.signIn(signInDto.email, signInDto.password);
+  signIn(@Body() signInDto: { Email: string; Password: string }) {
+    return this.authService.signIn(signInDto.Email, signInDto.Password);
   }
   @Post('register')
   async register(@Body() body: { username: string; email: string; password: string; }) {
     const { username, password, email } = body;
     // Manually check for required fields
-    if (!username || !password ) {
+    if (!username || !password) {
       throw new Error('Missing required fields');
     }
     return this.authService.register(username, email, password);
