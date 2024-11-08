@@ -15,7 +15,6 @@ export class UsersService {
     const newUser = new this.userModel({ username, email, password, createdAt: new Date() });
     return newUser.save();
   }
-
   async getUserProfile(userId: string): Promise<User> {
     const user = await this.userModel.findById(userId);
     if (!user) {
